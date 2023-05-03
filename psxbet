@@ -1,0 +1,51 @@
+const Discord = require('discord.js');
+const client = new Discord.Client();
+const prefix = '/';
+const token = "MTEwMjk0MjY5MTU3MjA1NjA4NA.Ga_Y5Q.dWHhl7sN7CU_bhSxYnXa-BjmZV-rUrEK3JDe3w";
+// Function to roll dice
+function rollDice() {
+  return Math.floor(Math.random() * 6) + 1;
+}
+// Deposit command
+client.on('message', async (message) => {
+  if (message.content.startsWith(`${prefix}deposit`)) {
+    const args = message.content.slice(`${prefix}deposit`.length).trim().split(/ +/);
+    const username = args.shift();
+    const depositAmount = parseInt(args.shift(), 10);
+    const depositMessage = args.join(' ');
+    const depositRequest = { user: username, amount: depositAmount, message: depositMessage };
+    // Save deposit request to the database or other storage
+    // ...
+    message.channel.send(`Deposit request created for ${username} for ${depositAmount} diamonds`);
+    const user = await client.users.fetch(username);
+    user.send(`You have been sent a deposit request from ${message.author}: ${depositAmount} diamonds for "${depositMessage}"`);
+  }
+});
+// Withdraw command
+client.on('message', async (message) => {
+  if (message.content.startsWith(`${prefix}withdraw`)) {
+    const args = message.content.slice(`${prefix}withdraw`.length).trim().split(/ +/);
+    const withdrawAmount = parseInt(args.shift(), 10);
+    const robloxUsername = args.join(' ');
+    // Withdraw diamonds from the game
+    const withdrawSuccess = await withdrawDiamonds(robloxUsername, withdrawAmount);
+    if (!withdrawSuccess) {
+      message.channel.send(`Failed to withdraw ${withdrawAmount} diamonds from ${robloxUsername}`);
+      return;
+    }
+    message.channel.send(`Successfully withdrew ${withdrawAmount} diamonds from ${robloxUsername}`);
+    const user = await client.users.fetch(message.author.id);
+    user.send(`You have received ${withdrawAmount} diamonds from ${robloxUsername}`);
+  }
+});
+// Roll dice command
+client.on('message', (message) => {
+  if (message.content.startsWith(`${prefix}roll`)) {
+    const diceResult = rollDice();
+    message.channel.send(`${message.author} rolled a ${diceResult}`);
+  }
+});
+client.on('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+});
+client.login(token);
